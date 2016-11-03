@@ -1,5 +1,16 @@
 <?php
 
+    require_once __DIR__ . '/Config/GlobalConf.php';
+    GlobalConf::setBathPath();
+
+    require_once __DIR__ . '/autoload.php';
+
+    $obj = new Save\MirrorSave();
+
+    exit;
+
+
+
     //创建Server对象，监听 127.0.0.1:9501端口
     $serv = new swoole_server("127.0.0.1", 9501);
 

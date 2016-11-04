@@ -1,11 +1,23 @@
 <?php
 
+
     require_once __DIR__ . '/Config/GlobalConf.php';
     GlobalConf::setBathPath();
 
     require_once __DIR__ . '/autoload.php';
 
-    $obj = new Save\MirrorSave();
+    //初始化
+    Config\GlobalVar::init();    
+
+
+    while(1) {
+        if(!Config\GlobalVar::$urls->isEmpty()) {
+            $url = Config\GlobalVar::$urls->get();
+            $html = file_get_contents($url);
+            
+        }
+    }
+
 
     exit;
 

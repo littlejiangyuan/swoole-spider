@@ -3,7 +3,12 @@
 class HtmlParse {
     private $html;
 
-    public function run() {
+    public function __construct($html) {
+        $this->html = $html;
 
+    }
+
+    public function run() {
+        
     }
 }

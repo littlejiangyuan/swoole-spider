@@ -56,6 +56,9 @@ class Url {
     public function getUrl() {
         return $this->url;
     }
-    
+
+    public function getDepth() {
+        return $this->depth;
+    }
 }
 

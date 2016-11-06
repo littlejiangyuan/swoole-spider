@@ -68,4 +68,8 @@ class FifoUrl extends Fifo {
         return false;
     }
 
+    public function count() {
+        return $this->count;
+    }
+
 }

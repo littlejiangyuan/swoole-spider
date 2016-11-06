@@ -1,6 +1,5 @@
 <?php
 
-
     require_once __DIR__ . '/Config/GlobalConf.php';
     GlobalConf::setBathPath();
 
@@ -14,7 +13,9 @@
         if(!Config\GlobalVar::$urls->isEmpty()) {
             $url = Config\GlobalVar::$urls->get();
             $html = file_get_contents($url);
-            
+            $obj = new Utils\Task($url, $html);
+            $obj->run();
+            echo Config\GlobalVar::$urls->count()."-";
         }
     }
 

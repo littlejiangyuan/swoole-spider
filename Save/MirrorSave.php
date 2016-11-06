@@ -7,7 +7,28 @@
  */
 
 class MirrorSave {
-    public function __construct() {
-        echo 'autoload success!';
+    protected $file;
+    protected $html;
+
+    public function __construct($file, $html) {
+        $this->file = $this->trueFile($file);
+        $this->html = $html;
+
     }
+
+    protected function trueFile($file) {
+        if($file == '/' || $file == '' ) {
+            $file = 'index.html';
+        }
+
+        return $file;
+    }
+
+    public function save() {
+        $saveFile = \GlobalConf::$outputBasePath . $this->file;
+
+        file_put_contents($saveFile, $this->html);
+    }
+
+
 }

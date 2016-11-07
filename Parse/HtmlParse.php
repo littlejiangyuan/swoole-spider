@@ -2,6 +2,7 @@
 
 namespace Parse;
 use Utils\Url;
+use Utils\Fifo\Dispatch;
 
 class HtmlParse {
     private $html;
@@ -13,8 +14,8 @@ class HtmlParse {
     }
 
     public function run() {
-        //var_dump($this->html);exit;
         $match = preg_match_all("/<[a|A].*?href=[\'\"]{0,1}([^>\'\"]*).*?>/",$this->html, $result);
+
         if($match){
             foreach($result[1] as $url) {
                 $sub = substr($url, 0, 4);
@@ -22,7 +23,7 @@ class HtmlParse {
                     $url = 'http://' . $url;
                 }
                 $u = new Url($url,$this->url->getDepth());
-                \Config\GlobalVar::$urls->put($u);
+                Dispatch::put($u);
             }
         }
     }

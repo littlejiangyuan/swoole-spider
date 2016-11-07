@@ -8,17 +8,24 @@
 namespace Config;
 use Utils\Fifo\FifoUrl;
 use Utils\Url;
-
+use Utils\HashTable;
 
 class GlobalVar {
     public static $table; //hash map
     
     public static $urls;
     
+    public static $firstUrl;
+    
     public static function init() {
         self::$urls = new FifoUrl();
         
         $url = new Url(\GlobalConf::$startUrl, 1);
         self::$urls->put($url);
+        self::$firstUrl = $url;
+        
+        //初始化hashtable
+        self::$table = new HashTable();
+
     }
 }

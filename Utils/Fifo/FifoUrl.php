@@ -39,6 +39,8 @@ class FifoUrl extends Fifo {
 
         $this->in = ( $this->in + 1 ) % $this->size;
         $this->count++;
+        
+        return true;
     }
 
     public function get() {

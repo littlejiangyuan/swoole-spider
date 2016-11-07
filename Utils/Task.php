@@ -23,7 +23,7 @@ class Task {
         $save = new MirrorSave($this->url, $this->html);
         $save->save();
 
-        $obj = new HtmlParse();
+        $obj = new HtmlParse($this->url, $this->html);
         $obj->run();
     }
 }

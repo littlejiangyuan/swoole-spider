@@ -13,7 +13,8 @@
         if(!Config\GlobalVar::$urls->isEmpty()) {
             $url = Config\GlobalVar::$urls->get();
             $html = file_get_contents($url);
-            $obj = new Utils\Task($url, $html);
+            $urlObj = new \Utils\Url($url,1);
+            $obj = new Utils\Task($urlObj, $html);
             $obj->run();
             echo Config\GlobalVar::$urls->count()."-";
         }

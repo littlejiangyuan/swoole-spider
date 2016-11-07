@@ -25,6 +25,9 @@ class Url {
         $this->protocol = $urlInfo['scheme'];
         $this->host = $urlInfo['host'];
         $this->port = $urlInfo['port'] ? $urlInfo['port'] : 80;
+        if($this->protocol == 'https') {
+            $this->port = 443;
+        }
         $this->file = $urlInfo['path'];
         $this->query = $urlInfo['query'];
 
@@ -50,15 +53,28 @@ class Url {
             $i++;
         }
 
-        return $h % GlobalConf::$TableSize;
+        return $h % \GlobalConf::$TableSize;
     }
     
     public function getUrl() {
         return $this->url;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getFile()
+    {
+        return $this->file;
+    }
+
+    public function getHost() {
+        return $this->host;
+    }
+    
     public function getDepth() {
         return $this->depth;
     }
+    
 }
 

@@ -20,9 +20,9 @@ class HtmlParse {
             foreach($result[1] as $url) {
                 $sub = substr($url, 0, 4);
                 if($sub != 'http') {
-                    $url = 'http://' . $url;
+                    $url = $this->url->getHost() . '://' . $url;
                 }
-                $u = new Url($url,$this->url->getDepth());
+                $u = new Url($url,$this->url->getDepth(), $this->url->getPort() );
                 Dispatch::put($u);
             }
         }

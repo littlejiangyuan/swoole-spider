@@ -6,20 +6,27 @@
     require_once __DIR__ . '/autoload.php';
 
     //初始化
-    Config\GlobalVar::init();    
+    Config\GlobalVar::init();
+
+
+/*
+$ss = 'http://toutiao.io:80/s/ios';
+$d = file_get_contents($ss);
+var_dump($d);exit;
+*/
 
 
     while(1) {
         if(!Config\GlobalVar::$urls->isEmpty()) {
             $url = Config\GlobalVar::$urls->get();
+            echo $url."\n";
             $html = file_get_contents($url);
             $urlObj = new \Utils\Url($url,1);
             $obj = new Utils\Task($urlObj, $html);
             $obj->run();
-            echo Config\GlobalVar::$urls->count()."-";
+            //echo Config\GlobalVar::$urls->count()."-";
         }
     }
-
 
     exit;
 

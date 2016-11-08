@@ -11,10 +11,11 @@ class Url {
     protected $depth;
 
     //解析url
-    public function __construct( $url, $depth) {
+    public function __construct( $url, $depth, $port = 80) {
         $this->url   = $url;
         $this->depth = $depth;
-
+        $this->port  = $port;
+        
         $this->parseUrl();
 
     }
@@ -24,7 +25,7 @@ class Url {
 
         $this->protocol = $urlInfo['scheme'];
         $this->host = $urlInfo['host'];
-        $this->port = $urlInfo['port'] ? $urlInfo['port'] : 80;
+        $this->port = $urlInfo['port'] ? $urlInfo['port'] : $this->port;
         if($this->protocol == 'https') {
             $this->port = 443;
         }
@@ -42,14 +43,15 @@ class Url {
     public function hashCode() {
         $i = 0;
         $h = $this->port;
-        while ($this->host[$i] != 0) {
-            $h = 31*$h + $this->host[$i];
+
+        while ($this->host[$i]) {
+            $h = (int)(31*$h + ord($this->host[$i]));
             $i++;
         }
 
         $i=0;
-        while ($this->file[$i] != 0) {
-            $h = 31*$h + $this->file[$i];
+        while ($this->file[$i]) {
+            $h = (int)(31*$h + ord($this->file[$i]));
             $i++;
         }
 
@@ -74,6 +76,10 @@ class Url {
     
     public function getDepth() {
         return $this->depth;
+    }
+    
+    public function getPort() {
+        return $this->port;
     }
     
 }

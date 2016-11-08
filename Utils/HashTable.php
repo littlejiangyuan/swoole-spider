@@ -44,8 +44,8 @@ class HashTable {
         $code = $url->hashCode();
         $position = $code/8;
         $bit = $code % 8;
-        $char = 1 << $bit; 
-        
+        $char = 1 << $bit;
+//echo $url->getUrl().'-----'.$code.'------'. ($this->table[$position] && $char) ."\n";
         return $this->table[$position] && $char;
     }
     

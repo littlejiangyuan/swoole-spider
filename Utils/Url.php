@@ -23,7 +23,7 @@ class Url {
     private function parseUrl() {//可以过滤掉url中锚点
         $urlInfo = parse_url($this->url);
 
-        $this->protocol = $urlInfo['scheme'];
+        $this->protocol = $urlInfo['scheme'] ? $urlInfo['scheme'] : 'http' ;
         $this->host = $urlInfo['host'];
         $this->port = $urlInfo['port'] ? $urlInfo['port'] : $this->port;
         if($this->protocol == 'https') {
@@ -82,5 +82,8 @@ class Url {
         return $this->port;
     }
     
+    public function getProtocol() {
+        return $this->protocol;
+    }
 }
 

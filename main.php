@@ -31,7 +31,6 @@ var_dump($d);exit;
     exit;
 
 
-
     //创建Server对象，监听 127.0.0.1:9501端口
     $serv = new swoole_server("127.0.0.1", 9501);
 

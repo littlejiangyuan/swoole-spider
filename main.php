@@ -17,11 +17,16 @@
     ));
 
     $serv->on('Task', function ($serv, $task_id, $from_id, $data) {
-        return $data;
+        $data = json_encode($data, true);
+        $urlObj = new \Utils\Url($data['url'], 1);
+        $obj = new Utils\Task($urlObj, $data['html']);
+        $obj->run();
+
+        return $data['url'];
     });
 
     $serv->on('Finish', function($serv, $task_id, $data) {
-        echo $data;
+        echo $data."\n";
     });
 
     //监听数据发送事件
@@ -29,19 +34,35 @@
 
     });
 
-$serv->on('start', function ($serv) use ($serv) {
-    begin($serv);
-});
 
-//启动服务器
-$serv->start();
+    $serv->on('WorkerStart', function ($serv, $worker_id) {
+        global $serv;
+        if($worker_id < 1) {
+            begin($serv);
+        }
+    });
+
+    //启动服务器
+    $serv->start();
 
 
     function begin($serv) {
-        //添加的事件循环
-        //$url = 'http://www.baidu.com';
-        //$urlObj = new \Utils\Url($url, 1);
 
+        /*************同步io***************/
+        while(!Config\GlobalVar::$urls->isEmpty()) {
+            $url = Config\GlobalVar::$urls->get();
+
+            $html = file_get_contents($url);
+
+            $data = json_encode(['url'=>$url, 'html' => $html]);
+
+            $serv->task($data);
+        }
+
+
+        /*********************异步io*********************/
+        /*
+        //添加的事件循环
         $fp = fsockopen('www.ifeng.com', 80, $errno, $errstr);
         stream_set_blocking($fp, 0); //设置非阻塞
         $str = '';
@@ -63,7 +84,7 @@ $serv->start();
 
             swoole_event_del($fp); // socket处理完成后，从epoll事件中移除socket
         });
-
+        */
     }
 
 

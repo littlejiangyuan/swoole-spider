@@ -17,12 +17,14 @@
     ));
 
     $serv->on('Task', function ($serv, $task_id, $from_id, $data) {
-        $data = json_encode($data, true);
-        $urlObj = new \Utils\Url($data['url'], 1);
-        $obj = new Utils\Task($urlObj, $data['html']);
+        $len = (int)substr($data, 0, 6);
+        $urlObj = substr($data, 6, $len);
+        $urlObj = unserialize($urlObj);
+
+        $obj = new Utils\Task($urlObj, substr($data, 6 + $len));
         $obj->run();
 
-        return $data['url'];
+        return 'success';
     });
 
     $serv->on('Finish', function($serv, $task_id, $data) {
@@ -49,14 +51,25 @@
     function begin($serv) {
 
         /*************同步io***************/
-        while(!Config\GlobalVar::$urls->isEmpty()) {
-            $url = Config\GlobalVar::$urls->get();
+        while(1) {
+            
+            if(!Config\GlobalVar::$urls->isEmpty()) {
+                $url = Config\GlobalVar::$urls->get();
 
-            $html = file_get_contents($url);
+                $html = file_get_contents($url);
 
-            $data = json_encode(['url'=>$url, 'html' => $html]);
+                $urlObj = new \Utils\Url($url,1);
+                $urlObjStr = serialize($urlObj);
+                $len = strlen($urlObjStr);
+                $len = str_pad((string)$len, 6, "0", STR_PAD_LEFT);
 
-            $serv->task($data);
+                $data = $len.$urlObjStr.$html;
+
+                $serv->task($data);
+
+            } else {
+                sleep(1);
+            }
         }
 
 
@@ -78,7 +91,7 @@
             }
 
             $serv->task($str);
-
+            //$urlObj = new \Utils\Url($url,1);
             //$obj = new Utils\Task($urlObj, $str);
             //$obj->run();
 

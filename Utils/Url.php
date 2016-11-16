@@ -55,7 +55,7 @@ class Url {
             $i++;
         }
 
-        return $h % \GlobalConf::$TableSize;
+        return $h % TABLE_SIZE;
     }
     
     public function getUrl() {

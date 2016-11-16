@@ -1,13 +1,33 @@
 <?php
 
-//定义运行模式，单进程还是多进程  1单进程2多进程
-define("RUN_MODE", 2);
+    //hash表大小
+    define("TABLE_SIZE", 64000000);
+
+    //初始url
+    define("START_URL", 'https://toutiao.io/');
+
+    //定义运行模式，单进程还是多进程  1单进程2多进程
+    define("RUN_MODE", 2);
+
+    //是否是io复用 0不是 1是
+    define("MUTI_IO", 0);
 
     //全局变量
+    $table    = null;  //hash表，存放url hash位图
+    $todoUrls = null;  //待抓取url
+    $firstUrl = null;  //初始url
+    $inLink   = true;  //是否只抓取当前host的url
+    $root     = null;
+    $outputPath = null; //输出路径
 
 
     require_once __DIR__ . '/Config/GlobalConf.php';
     GlobalConf::setBathPath();
+
+    $root = __DIR__ . '/../';
+    $outputPath = $root . '/output/';
+
+
     require_once __DIR__ . '/autoload.php';
 
 
@@ -31,7 +51,9 @@ define("RUN_MODE", 2);
 
         $html = $obj->run();
 
-        $serv->sendMessage($html, $from_id);
+        if($html) {
+            $serv->sendMessage(json_encode($html), $from_id);
+        }
     });
 
     $serv->on('Finish', function($serv, $task_id, $data) {
@@ -45,22 +67,24 @@ define("RUN_MODE", 2);
 
     //当工作进程收到由sendMessage发送的管道消息时会触发onPipeMessage事件。worker/task进程都可能会触发onPipeMessage事件
     $serv->on('PipeMessage',function (swoole_server $serv,  $from_worker_id, $message){
-        $table    = null;
-        $todoUrls = null;
-        $firstUrl = null;
-        $inLink   = true;
-        $outputPath = null;
+        $urls = json_decode($message, true);
+
+        foreach($urls as $url) {
+            $sub = substr($url, 0, 4);
+            if($sub != 'http') {
+                //$url = $this->url->getProtocol() . '://' . $this->url->getHost() . $url;
+            }
+
+            //$u = new Url($url,$this->url->getDepth(), $this->url->getPort() );
+            $u = new Url($url, 1, 443 );
+
+            \Utils\Dispatch::put($u);
+        }
+
     });
 
     $serv->on('WorkerStart', function ($serv, $worker_id) {
-        $table    = null;
-        $todoUrls = null;
-        $firstUrl = null;
-        $inLink   = true;
-        $outputPath = null;
-
-        //初始化
-        Config\GlobalVar::init();   
+        workerInit();
 
         if($worker_id < 1) {
             begin($serv);
@@ -70,17 +94,30 @@ define("RUN_MODE", 2);
     //启动服务器
     $serv->start();
 
+    function workerInit() {
+        global $table;
+        global $todoUrls;
+        global $firstUrl;
+
+        //初始化
+        $todoUrls = new \Utils\Fifo\FifoUrl();
+
+        $url = new \Utils\Url(START_URL, 1);
+        $todoUrls->put($url);
+        $firstUrl = $url;
+
+        //初始化hashtable
+        $table = new \Utils\HashTable();
+    }
 
     function begin($serv) {
+        global $todoUrls;
 
         /*************同步io***************/
         while(1) {
             if(!$todoUrls->isEmpty()) {
-
                 $url = $todoUrls->get();
-
                 $html = file_get_contents($url);
-
                 $urlObj = new \Utils\Url($url,1);
                 $urlObjStr = serialize($urlObj);
                 $len = strlen($urlObjStr);
@@ -122,10 +159,6 @@ define("RUN_MODE", 2);
         });
         */
     }
-
-
-
-
 
 
 

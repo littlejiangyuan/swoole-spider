@@ -14,6 +14,7 @@ use Parse\HtmlParse;
 class Task {
     protected $url;
     protected $html;
+
     public function __construct($url, $html) {
         $this->url = $url;
         $this->html = $html;
@@ -23,7 +24,9 @@ class Task {
         $save = new MirrorSave($this->url, $this->html);
         $save->save();
 
-        $obj = new HtmlParse($this->url, $this->html);
-        $obj->run();
+        $obj = new HtmlParse();
+        $urls = $obj->run();
+
+        return $urls;
     }
 }

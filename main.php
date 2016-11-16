@@ -1,10 +1,16 @@
 <?php
 
+//定义运行模式，单进程还是多进程  1单进程2多进程
+define("RUN_MODE", 2);
+
+    //全局变量
+
+
     require_once __DIR__ . '/Config/GlobalConf.php';
     GlobalConf::setBathPath();
     require_once __DIR__ . '/autoload.php';
-    //初始化
-    Config\GlobalVar::init();
+
+
 
     /********************多进程模型********************/
 
@@ -22,9 +28,10 @@
         $urlObj = unserialize($urlObj);
 
         $obj = new Utils\Task($urlObj, substr($data, 6 + $len));
-        $obj->run();
 
-        return 'success';
+        $html = $obj->run();
+
+        $serv->sendMessage($html, $from_id);
     });
 
     $serv->on('Finish', function($serv, $task_id, $data) {
@@ -36,9 +43,25 @@
 
     });
 
+    //当工作进程收到由sendMessage发送的管道消息时会触发onPipeMessage事件。worker/task进程都可能会触发onPipeMessage事件
+    $serv->on('PipeMessage',function (swoole_server $serv,  $from_worker_id, $message){
+        $table    = null;
+        $todoUrls = null;
+        $firstUrl = null;
+        $inLink   = true;
+        $outputPath = null;
+    });
 
     $serv->on('WorkerStart', function ($serv, $worker_id) {
-        global $serv;
+        $table    = null;
+        $todoUrls = null;
+        $firstUrl = null;
+        $inLink   = true;
+        $outputPath = null;
+
+        //初始化
+        Config\GlobalVar::init();   
+
         if($worker_id < 1) {
             begin($serv);
         }
@@ -52,9 +75,9 @@
 
         /*************同步io***************/
         while(1) {
-            
-            if(!Config\GlobalVar::$urls->isEmpty()) {
-                $url = Config\GlobalVar::$urls->get();
+            if(!$todoUrls->isEmpty()) {
+
+                $url = $todoUrls->get();
 
                 $html = file_get_contents($url);
 

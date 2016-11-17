@@ -34,16 +34,17 @@
     $serv = new swoole_server("127.0.0.1", 9501);
 
     $serv->set(array(
-        'worker_num' => 1,
+        'worker_num' => 2,
         'task_worker_num' => 4
     ));
 
     $serv->on('Task', function ($serv, $task_id, $from_id, $data) {
-        $len = (int)substr($data, 0, 6);
-        $urlObj = substr($data, 6, $len);
-        $urlObj = unserialize($urlObj);
 
-        $obj = new \Utils\Task($urlObj, substr($data, 6 + $len));
+        $url = $data;
+        $urlObj = new \Utils\Url($url, 1);
+        $html = file_get_contents($url);
+
+        $obj = new \Utils\Task($urlObj, $html);
 
         $urls = $obj->run();
 
@@ -63,33 +64,42 @@
 
     //当工作进程收到由sendMessage发送的管道消息时会触发onPipeMessage事件。worker/task进程都可能会触发onPipeMessage事件
     $serv->on('pipeMessage',function (swoole_server $serv,  $from_worker_id, $message){
+        global $todoUrls;
 
-
-        echo $from_worker_id.'---------';
-
-        /*
         $urls = json_decode($message, true);
         foreach($urls as $url) {
             $sub = substr($url, 0, 4);
             if($sub != 'http') {
                 //$url = $this->url->getProtocol() . '://' . $this->url->getHost() . $url;
+
+                $url =  'https://toutiao.io' .  $url;
             }
 
             //$u = new Url($url,$this->url->getDepth(), $this->url->getPort() );
-            $u = new Url($url, 1, 443 );
+            $u = new Utils\Url($url, 1, 443 );
 
-            \Utils\Dispatch::put($u);
+            \Utils\Fifo\Dispatch::put($u);
         }
-        */
+
+
+
+        if(!$todoUrls->isEmpty()) {
+            $url = $todoUrls->get();
+            $serv->task($url);
+        }
+
+
 
     });
 
+    //2个work进程
     $serv->on('WorkerStart', function ($serv, $worker_id) {
 
-        workerInit();
-
-        if($worker_id < 1) {
+        if($worker_id < 1) { //0号
+            workerInit();
             begin($serv);
+        } else {
+
         }
     });
 
@@ -115,9 +125,16 @@
     function begin($serv) {
         global $todoUrls;
 
-        /*************同步io***************/
-        do {
+        if(!$todoUrls->isEmpty()) {
+            $url = $todoUrls->get();
+            $serv->task($url);
+        }
 
+
+
+        /*************同步io***************/
+        /*
+        do {
             if(!$todoUrls->isEmpty()) {
                 $url = $todoUrls->get();
                 $html = file_get_contents($url);
@@ -125,17 +142,13 @@
                 $urlObjStr = serialize($urlObj);
                 $len = strlen($urlObjStr);
                 $len = str_pad((string)$len, 6, "0", STR_PAD_LEFT);
-
                 $data = $len.$urlObjStr.$html;
-
                 $serv->task($data);
-
-
             } else {
                 //sleep(1);
             }
         } while(1);
-
+        */
 
         /*********************异步io*********************/
         /*

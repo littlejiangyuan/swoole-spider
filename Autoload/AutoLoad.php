@@ -13,9 +13,7 @@ class AutoLoad {
 
         $filename = $root . $classname.'.php';
         $filename = str_replace('\\', '/', $filename);
-if($classname == 'Utils\FifoUrl') {
-echo $filename;exit;
-}
+
         if(file_exists($filename)) {
             require_once $filename;
         }

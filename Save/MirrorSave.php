@@ -38,6 +38,8 @@ class MirrorSave {
     }
 
     public function checkPath() {
+        global $outputPath;
+
         $pos = strrpos($this->file, '/');
         $trueFile = '';
         if($pos >= 0) {
@@ -52,7 +54,7 @@ class MirrorSave {
             $trueFile = 'index.html';
         }
 
-        $path = \GlobalConf::$outputBasePath . $this->url->getHost() . '/'. $path;
+        $path = $outputPath. $this->url->getHost() . '/'. $path;
 
         if(!file_exists($path)) {
             mkdir($path, 0777, true);

@@ -8,8 +8,9 @@ class HtmlParse {
     private $html;
     private $url;
 
-    public function __construct() {
-
+    public function __construct($html) {
+        $this->html = $html;
+        
     }
 
     public function run() {
@@ -17,6 +18,7 @@ class HtmlParse {
 
         if($match){
             return $result[1];
+
             /*
             foreach($result[1] as $url) {
                 $sub = substr($url, 0, 4);

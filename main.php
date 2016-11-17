@@ -20,17 +20,13 @@
     $root     = null;
     $outputPath = null; //输出路径
 
-
     //require_once __DIR__ . '/Config/GlobalConf.php';
     //GlobalConf::setBathPath();
 
-    $root = __DIR__ . '/../';
+    $root = __DIR__ . '/';
     $outputPath = $root . '/output/';
 
-
     require_once __DIR__ . '/autoload.php';
-
-
 
     /********************多进程模型********************/
 
@@ -47,17 +43,17 @@
         $urlObj = substr($data, 6, $len);
         $urlObj = unserialize($urlObj);
 
-        $obj = new Utils\Task($urlObj, substr($data, 6 + $len));
+        $obj = new \Utils\Task($urlObj, substr($data, 6 + $len));
 
-        $html = $obj->run();
+        $urls = $obj->run();
 
-        if($html) {
-            $serv->sendMessage(json_encode($html), $from_id);
+        if($urls) {
+            $serv->sendMessage(json_encode($urls), 0);
         }
     });
 
     $serv->on('Finish', function($serv, $task_id, $data) {
-        echo $data."\n";
+        echo $data;
     });
 
     //监听数据发送事件
@@ -66,9 +62,13 @@
     });
 
     //当工作进程收到由sendMessage发送的管道消息时会触发onPipeMessage事件。worker/task进程都可能会触发onPipeMessage事件
-    $serv->on('PipeMessage',function (swoole_server $serv,  $from_worker_id, $message){
-        $urls = json_decode($message, true);
+    $serv->on('pipeMessage',function (swoole_server $serv,  $from_worker_id, $message){
 
+
+        echo $from_worker_id.'---------';
+
+        /*
+        $urls = json_decode($message, true);
         foreach($urls as $url) {
             $sub = substr($url, 0, 4);
             if($sub != 'http') {
@@ -80,11 +80,12 @@
 
             \Utils\Dispatch::put($u);
         }
+        */
 
     });
 
     $serv->on('WorkerStart', function ($serv, $worker_id) {
-        require_once __DIR__ . '/autoload.php';
+
         workerInit();
 
         if($worker_id < 1) {
@@ -115,8 +116,8 @@
         global $todoUrls;
 
         /*************同步io***************/
-        while(1) {
-echo $todoUrls->count().'-';
+        do {
+
             if(!$todoUrls->isEmpty()) {
                 $url = $todoUrls->get();
                 $html = file_get_contents($url);
@@ -129,10 +130,11 @@ echo $todoUrls->count().'-';
 
                 $serv->task($data);
 
+
             } else {
-                sleep(1);
+                //sleep(1);
             }
-        }
+        } while(1);
 
 
         /*********************异步io*********************/

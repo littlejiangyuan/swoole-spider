@@ -11,7 +11,10 @@ class GlobalConf {
     public static $inLink = true; //设置为true表示只抓取同host的
 
     public static function setBathPath() {
+        global $outputPath;
         self::$root = __DIR__ . '/../';
-        self::$outputBasePath = self::$root . '/output/';
+        //self::$outputBasePath = self::$root . '/output/';
+
+        $outputPath = self::$root . '/output/';
     }
 }

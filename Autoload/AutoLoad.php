@@ -9,7 +9,9 @@
 class AutoLoad {
 
     public static function register($classname) {
-        $filename = GlobalConf::$root . $classname.'.php';
+        global $root;
+
+        $filename = $root . $classname.'.php';
         $filename = str_replace('\\', '/', $filename);
 if($classname == 'Utils\FifoUrl') {
 echo $filename;exit;

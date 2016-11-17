@@ -21,8 +21,8 @@
     $outputPath = null; //输出路径
 
 
-    require_once __DIR__ . '/Config/GlobalConf.php';
-    GlobalConf::setBathPath();
+    //require_once __DIR__ . '/Config/GlobalConf.php';
+    //GlobalConf::setBathPath();
 
     $root = __DIR__ . '/../';
     $outputPath = $root . '/output/';
@@ -84,6 +84,7 @@
     });
 
     $serv->on('WorkerStart', function ($serv, $worker_id) {
+        require_once __DIR__ . '/autoload.php';
         workerInit();
 
         if($worker_id < 1) {
@@ -115,6 +116,7 @@
 
         /*************同步io***************/
         while(1) {
+echo $todoUrls->count().'-';
             if(!$todoUrls->isEmpty()) {
                 $url = $todoUrls->get();
                 $html = file_get_contents($url);

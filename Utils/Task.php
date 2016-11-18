@@ -24,7 +24,12 @@ class Task {
         $save = new MirrorSave($this->url, $this->html);
         $save->save();
 
-        $obj = new HtmlParse($this->html);
+        if(RUN_MODE == 2) {
+            $obj = new HtmlParse($this->html);
+        } else {
+            $obj = new HtmlParse($this->html, $this->url);
+        }
+        
         $urls = $obj->run();
 
         return $urls;

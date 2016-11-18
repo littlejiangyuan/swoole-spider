@@ -4,10 +4,10 @@
     define("TABLE_SIZE", 64000000);
 
     //初始url
-    define("START_URL", 'https://toutiao.io/');
+    define("START_URL", 'https://toutiao.io');
 
     //定义运行模式，单进程还是多进程  1单进程2多进程
-    define("RUN_MODE", 2);
+    define("RUN_MODE", 1);
 
     //是否是io复用 0不是 1是
     define("MUTI_IO", 0);
@@ -20,13 +20,34 @@
     $root     = null;
     $outputPath = null; //输出路径
 
-    //require_once __DIR__ . '/Config/GlobalConf.php';
-    //GlobalConf::setBathPath();
-
     $root = __DIR__ . '/';
     $outputPath = $root . '/output/';
 
     require_once __DIR__ . '/autoload.php';
+    $firstUrl = new \Utils\Url(START_URL, 1);
+
+
+//初始化
+$todoUrls = new \Utils\Fifo\FifoUrl();
+$url = new \Utils\Url(START_URL, 1);
+$todoUrls->put($url);
+$firstUrl = $url;
+//初始化hashtable
+$table = new \Utils\HashTable();
+while(1) {
+
+    if(!$todoUrls->isEmpty()) {
+        $url = $todoUrls->get();
+        echo $url."\n";
+        $html = file_get_contents($url);
+        $urlObj = new \Utils\Url($url,1);
+        $obj = new Utils\Task($urlObj, $html);
+        $obj->run();
+
+        echo $todoUrls>count()."-";
+    }
+}
+exit;
 
     /********************多进程模型********************/
 
@@ -39,17 +60,48 @@
     ));
 
     $serv->on('Task', function ($serv, $task_id, $from_id, $data) {
+        global $inLink;
+        global $firstUrl;
 
         $url = $data;
         $urlObj = new \Utils\Url($url, 1);
+        echo $url."\n";
+
         $html = file_get_contents($url);
+
+
+        if($html == false) {
+            $serv->sendMessage('1', $from_id);
+        }
 
         $obj = new \Utils\Task($urlObj, $html);
 
         $urls = $obj->run();
 
+        foreach($urls as $key => $u) {
+            if($inLink) {
+                $pro = substr($u, 0, 4);
+                if($pro != 'http') {
+                    $host = $firstUrl->getHost();
+                } else {
+                    $urlInfo = parse_url($u);
+                    $host = $urlInfo['host'];
+                }
+
+                if ($firstUrl->getHost() != $host) {
+                    unset($urls[$key]);
+                }
+            }
+        }
+
         if($urls) {
-            $serv->sendMessage(json_encode($urls), 0);
+            $sendData = [
+                'urlobj' => serialize($urlObj),
+                'urls'   => $urls,
+            ];
+            $serv->sendMessage(json_encode($sendData), $from_id);
+        } else {
+            $serv->sendMessage('1', $from_id);
         }
     });
 
@@ -66,21 +118,33 @@
     $serv->on('pipeMessage',function (swoole_server $serv,  $from_worker_id, $message){
         global $todoUrls;
 
-        $urls = json_decode($message, true);
-        foreach($urls as $url) {
-            $sub = substr($url, 0, 4);
-            if($sub != 'http') {
-                //$url = $this->url->getProtocol() . '://' . $this->url->getHost() . $url;
+        if($message == 1) {
 
-                $url =  'https://toutiao.io' .  $url;
+        } else {
+            $message = json_decode($message, true);
+            $urls = $message['urls'];
+            $urlObj = unserialize($message['urlobj']);
+            foreach ($urls as $url) {
+                $sub = substr($url, 0, 4);
+                if ($sub != 'http') {
+                    $url = $urlObj->getProtocol() . '://' . $urlObj->getHost() . $url;
+                    $port = $urlObj->getPort();
+                } else {
+                    $char = substr($url, 5, 1);
+                    if ($char == 's') {
+                        $port = 443;
+                    } else {
+                        $port = 80;
+                    }
+
+                }
+
+                $u = new Utils\Url($url, $urlObj->getDepth(), $port);
+
+
+                \Utils\Fifo\Dispatch::put($u);
             }
-
-            //$u = new Url($url,$this->url->getDepth(), $this->url->getPort() );
-            $u = new Utils\Url($url, 1, 443 );
-
-            \Utils\Fifo\Dispatch::put($u);
         }
-
 
 
         if(!$todoUrls->isEmpty()) {
